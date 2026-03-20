@@ -457,8 +457,8 @@ addEventListener('DOMContentLoaded', () => {
 
             // parse text in brackets and then the URL in parentheses.
             .replace(/\[([^\[\]]+)\]\((.+?)\)/g, (_, text, href) => {
-                if (!/^https?:\/\//i.test(href)) return text;
-                const safeHref = href.replace(/"/g, '&quot;');
+                if (!/^https?:\/\//i.test(href)) return encodeHTML(text);
+                const safeHref = encodeHTML(href);
                 return `<a title="${encodeHTML(text)}" target="_blank" class="anchor" href="${safeHref}">${encodeHTML(text)}</a>`;
             })
     

@@ -456,7 +456,11 @@ addEventListener('DOMContentLoaded', () => {
             })
 
             // parse text in brackets and then the URL in parentheses.
-            .replace(/\[([^\[\]]+)\]\((.+?)\)/g, `<a title="$1" target="_blank" class="anchor" href="$2">$1</a>`)
+            .replace(/\[([^\[\]]+)\]\((.+?)\)/g, (_, text, href) => {
+                if (!/^https?:\/\//i.test(href)) return text;
+                const safeHref = href.replace(/"/g, '&quot;');
+                return `<a title="${encodeHTML(text)}" target="_blank" class="anchor" href="${safeHref}">${encodeHTML(text)}</a>`;
+            })
     
         if (inlineBlock)
             // Treat both inline code and code blocks as inline code
@@ -586,7 +590,7 @@ addEventListener('DOMContentLoaded', () => {
                 for (const [i, embed] of (object.embeds.length ? object.embeds : [{}]).entries()) {
                     const guiEmbedName = gui.appendChild(child.cloneNode(true))
 
-                    guiEmbedName.querySelector('.text').innerHTML = `Embed ${i + 1}${embed.title ? `: <span>${embed.title}</span>` : ''}`;
+                    guiEmbedName.querySelector('.text').innerHTML = `Embed ${i + 1}${embed.title ? `: <span>${encodeHTML(embed.title)}</span>` : ''}`;
                     guiEmbedName.querySelector('.icon').addEventListener('click', () => {
                         object.embeds.splice(i, 1);
                         buildGui();
@@ -800,7 +804,7 @@ addEventListener('DOMContentLoaded', () => {
                                 embedObj.title = value;
                                 const guiEmbedName = el.target.closest('.guiEmbed')?.previousElementSibling;
                                 if (guiEmbedName?.classList.contains('guiEmbedName'))
-                                    guiEmbedName.querySelector('.text').innerHTML = `${guiEmbedName.innerText.split(':')[0]}${value ? `: <span>${value}</span>` : ''}`;
+                                    guiEmbedName.querySelector('.text').innerHTML = `${guiEmbedName.innerText.split(':')[0]}${value ? `: <span>${encodeHTML(value)}</span>` : ''}`;
                                 buildEmbed({ only: 'embedTitle', index: guiEmbedIndex(el.target) });
                                 break;
                             case 'editAuthorName':

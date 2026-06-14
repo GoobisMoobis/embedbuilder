@@ -85,8 +85,9 @@ const decodeJson = data => {
         try { jsonData = LZString.decompressFromEncodedURIComponent(decodeURIComponent(str)); } catch(e) {}
     }
     if (!jsonData) {
-        jsonData = decodeURIComponent(atob(str));
+        try { jsonData = decodeURIComponent(atob(str)); } catch(e) {}
     }
+    if (!jsonData) return {};
     return typeof jsonData === 'string' ? JSON.parse(jsonData) : jsonData;
 };
 
@@ -261,8 +262,9 @@ let jsonObject = window.json || {
     }
 }
 
-if (dataSpecified)
-    jsonObject = decodeJson();
+if (dataSpecified) {
+    try { jsonObject = decodeJson(); } catch(e) { console.error('decodeJson failed:', e); }
+}
 
 if (allowPlaceholders)
     allowPlaceholders = params.get('placeholders') === 'errors' ? 1 : 2;

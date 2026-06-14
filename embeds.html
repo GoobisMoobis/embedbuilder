@@ -30,13 +30,11 @@
         <script src="embeds/registry.js"></script>
         <script>
             const _name = new URLSearchParams(location.search).get('name');
-            const _raw = registry[_name];
-            if (_raw) {
-                const _url = new URL(location.href);
-                _url.searchParams.set('data', _raw);
-                history.replaceState(null, '', _url);
-            }
-            window.options = { hideEditor: true, disableEditorToggle: true };
+            window.options = {
+                hideEditor: true,
+                disableEditorToggle: true,
+                data: registry[_name],
+            };
         </script>
         <script src="assets/js/script.js" defer></script>
     </head>

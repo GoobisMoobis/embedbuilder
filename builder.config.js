@@ -19,7 +19,7 @@ options = {
     allowPlaceholders: false,
     autoUpdateURL: false,
     autoParams: false,
-    hideEditor: false,
+    hideEditor: true,
     hidePreview: false,
     hideMenu: false,
     single: false,

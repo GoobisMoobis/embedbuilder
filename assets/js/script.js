@@ -64,7 +64,7 @@ const createElement = object => {
 }
 
 const encodeJson = (jsonCode, withURL = false, redirect = false) => {
-    let data = btoa(encodeURIComponent((JSON.stringify(typeof jsonCode === 'object' ? jsonCode : json))));
+    let data = LZString.compressToEncodedURIComponent(JSON.stringify(typeof jsonCode === 'object' ? jsonCode : json));
     let url = new URL(location.href);
 
     if (withURL) {
@@ -72,16 +72,19 @@ const encodeJson = (jsonCode, withURL = false, redirect = false) => {
         if (redirect)
             return top.location.href = url;
 
-        data = url.href
-            // Replace %3D ('=' url encoded) with '='
-            .replace(/data=\w+(?:%3D)+/g, 'data=' + data);
+        data = url.href;
     }
 
     return data;
 };
 
 const decodeJson = data => {
-    const jsonData = decodeURIComponent(atob(data || dataSpecified));
+    const str = data || dataSpecified;
+    let jsonData = LZString.decompressFromEncodedURIComponent(str);
+    if (!jsonData) {
+        // Fall back to legacy base64 encoding
+        jsonData = decodeURIComponent(atob(str));
+    }
     return typeof jsonData === 'string' ? JSON.parse(jsonData) : jsonData;
 };
 
@@ -194,7 +197,7 @@ const externalParsing = ({ noEmojis, element } = {}) => {
 };
 
 let embedKeys = ["author", "footer", "color", "thumbnail", "image", "fields", "title", "description", "url", "timestamp"];
-let mainKeys = ["embed", "embeds", "content"];
+let mainKeys = ["embed", "embeds", "content", "username", "avatar_url"];
 let allJsonKeys = [...mainKeys, ...embedKeys];
 
 // 'jsonObject' is used internally, do not change it's value. Assign to 'json' instead.
@@ -993,6 +996,14 @@ addEventListener('DOMContentLoaded', () => {
     // Renders embed and message content.
     buildEmbed = ({ jsonData, only, index = 0 } = {}) => {
         if (jsonData) json = jsonData;
+
+        if (!noUser) {
+            const usernameEl = document.querySelector('.username');
+            const avatarEl = document.querySelector('.avatar');
+            if (usernameEl) usernameEl.textContent = jsonObject.username || username || 'Discord Bot';
+            if (avatarEl && (jsonObject.avatar_url || avatar)) avatarEl.src = jsonObject.avatar_url || avatar;
+        }
+
         if (!jsonObject.embeds?.length) document.body.classList.add('emptyEmbed');
 
         try {
@@ -1305,7 +1316,7 @@ addEventListener('DOMContentLoaded', () => {
             const data = encodeJson(json, true).replace(/(?<!data=[^=]+|=)=(&|$)/g, x => x === '=' ? '' : '&');
             if (!window.chrome)
                 // With long text inside a 'prompt' on Chromium based browsers, some text will be trimmed off and replaced with '...'.
-                return prompt('Here\'s the current URL with base64 embed data:', data);
+                return prompt('Here\'s the current URL with compressed embed data:', data);
 
             // So, for the Chromium users, we copy to clipboard instead of showing a prompt.
             try {
@@ -1451,6 +1462,23 @@ addEventListener('DOMContentLoaded', () => {
             next();
         }
     });
+
+    const keysDown = new Set();
+    document.addEventListener('keydown', e => keysDown.add(e.key.toLowerCase()));
+    document.addEventListener('keyup', e => keysDown.delete(e.key.toLowerCase()));
+
+    if (!options.disableEditorToggle) {
+        document.addEventListener('keydown', e => {
+            if (e.ctrlKey && e.key.toLowerCase() === 'x' && keysDown.has('c') ||
+                e.ctrlKey && e.key.toLowerCase() === 'c' && keysDown.has('x')) {
+                e.preventDefault();
+                const nowHidden = document.body.classList.toggle('no-editor');
+                const editorCheckbox = document.querySelector('.toggle .toggles .editor input');
+                if (editorCheckbox) editorCheckbox.checked = !nowHidden;
+                if (!nowHidden) editor?.refresh();
+            }
+        });
+    }
 });
 
 // Don't assign to 'jsonObject', assign to 'json' instead.
@@ -1465,6 +1493,12 @@ Object.defineProperty(window, 'json', {
 
         if (jsonObject.content)
             json.content = jsonObject.content;
+
+        if (jsonObject.username)
+            json.username = jsonObject.username;
+
+        if (jsonObject.avatar_url)
+            json.avatar_url = jsonObject.avatar_url;
 
         // If 'jsonObject.embeds' array is set and has content. Empty braces ({}) will be filtered as not content.
         if (jsonObject.embeds?.length)
@@ -1485,6 +1519,8 @@ Object.defineProperty(window, 'json', {
 
         jsonObject = {
             ...(content && { content }),
+            ...(val.username?.trim() && { username: val.username.trim() }),
+            ...(val.avatar_url?.trim() && { avatar_url: val.avatar_url.trim() }),
             embeds: embeds.map(cleanEmbed),
         };
 

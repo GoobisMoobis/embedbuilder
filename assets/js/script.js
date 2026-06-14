@@ -465,6 +465,14 @@ addEventListener('DOMContentLoaded', () => {
         if (replaceEmojis)
             txt = txt.replace(/(?<!code(?: \w+=".+")?>[^>]+)(?<!\/[^\s"]+?):((?!\/)\w+):/g, (match, p) => p && emojis[p] ? emojis[p] : match);
 
+        const codeBlocks = [];
+        if (!inlineBlock)
+            txt = txt.replace(/```(?:([a-z0-9_+\-.]+?)\n)?\n*([^\n][^]*?)\n*```/ig, (m, w, x) => {
+                const placeholder = `\u0000CODEBLOCK${codeBlocks.length}\u0000`;
+                codeBlocks.push(w ? `<pre><code class="${w}">${x.trim()}</code></pre>` : `<pre><code class="hljs nohighlight">${x.trim()}</code></pre>`);
+                return placeholder;
+            });
+
         txt = txt
             /** Markdown */
             .replace(/&#60;:\w+:(\d{17,19})&#62;/g, '<img class="emoji" src="https://cdn.discordapp.com/emojis/$1.png"/>')
@@ -479,10 +487,13 @@ addEventListener('DOMContentLoaded', () => {
             .replace(/^# (.*)$/gm, '<h1 class="heading1">$1</h1>')
             .replace(/^## (.*)$/gm, '<h2 class="heading2">$1</h2>')
             .replace(/^### (.*)$/gm, '<h3 class="heading3">$1</h3>')
+            .replace(/^(?<!\\)-# (.*)$/gm, '<span class="subtext">$1</span>')
             // Replace >>> and > with block-quotes. &#62; is HTML code for >
             .replace(/^(?: *&#62;&#62;&#62; ([\s\S]*))|(?:^ *&#62;(?!&#62;&#62;) +.+\n)+(?:^ *&#62;(?!&#62;&#62;) .+\n?)+|^(?: *&#62;(?!&#62;&#62;) ([^\n]*))(\n?)/mg, (all, match1, match2, newLine) => {
                 return `<div class="blockquote"><div class="blockquoteDivider"></div><blockquote>${match1 || match2 || newLine ? match1 || match2 : all.replace(/^ *&#62; /gm, '')}</blockquote></div>`;
             })
+            .replace(/^(?<!\\)- (.+)$/gm, '<li>$1</li>')
+            .replace(/(?:^|\n)(<li>[\s\S]*?<\/li>(?:\n<li>[\s\S]*?<\/li>)*)/g, (all, items) => `${all.startsWith('\n') ? '\n' : ''}<ul class="mdList">${items}</ul>`)
 
             /** Mentions */
             .replace(/&#60;#\d+&#62;/g, () => `<span class="mention channel interactive">channel</span>`)
@@ -502,13 +513,10 @@ addEventListener('DOMContentLoaded', () => {
             // Treat both inline code and code blocks as inline code
             txt = txt.replace(/`([^`]+?)`|``([^`]+?)``|```((?:\n|.)+?)```/g, (m, x, y, z) => x ? `<code class="inline">${x}</code>` : y ? `<code class="inline">${y}</code>` : z ? `<code class="inline">${z}</code>` : m);
         else {
-            // Code block
-            txt = txt.replace(/```(?:([a-z0-9_+\-.]+?)\n)?\n*([^\n][^]*?)\n*```/ig, (m, w, x) => {
-                if (w) return `<pre><code class="${w}">${x.trim()}</code></pre>`
-                else return `<pre><code class="hljs nohighlight">${x.trim()}</code></pre>`
-            });
             // Inline code
             txt = txt.replace(/`([^`]+?)`|``([^`]+?)``/g, (m, x, y, z) => x ? `<code class="inline">${x}</code>` : y ? `<code class="inline">${y}</code>` : z ? `<code class="inline">${z}</code>` : m)
+            for (const [i, block] of codeBlocks.entries())
+                txt = txt.replace(`\u0000CODEBLOCK${i}\u0000`, block);
         }
         return txt;
     }

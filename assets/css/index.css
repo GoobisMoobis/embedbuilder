@@ -872,6 +872,22 @@ u {
     background-color: var(--interactive-muted);
 }
 
+.subtext {
+    display: block;
+    color: var(--embedTextColor2);
+    font-size: 0.875rem;
+    line-height: 1.125rem;
+}
+
+.markup ul.mdList {
+    margin: .25rem 0 .25rem 1.25rem;
+    padding: 0;
+}
+
+.markup ul.mdList li {
+    margin: 0;
+}
+
 .container {
     display: grid;
     grid-auto-flow: row;

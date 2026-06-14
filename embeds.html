@@ -31,11 +31,12 @@
         <script>
             const _name = new URLSearchParams(location.search).get('name');
             const _raw = registry[_name];
-            window.options = {
-                hideEditor: true,
-                disableEditorToggle: true,
-                data: _raw ? (function(){ try { return decodeURIComponent(_raw); } catch(e) { return _raw; } })() : null,
-            };
+            if (_raw) {
+                const _url = new URL(location.href);
+                _url.searchParams.set('data', _raw);
+                history.replaceState(null, '', _url);
+            }
+            window.options = { hideEditor: true, disableEditorToggle: true };
         </script>
         <script src="assets/js/script.js" defer></script>
     </head>

@@ -29,11 +29,26 @@
         <script src="assets/js/components.js"></script>
         <script src="embeds/registry.js"></script>
         <script>
+            const getRegistryData = value => {
+                if (typeof value !== 'string') return value;
+
+                const raw = value.trim();
+
+                try {
+                    const registryUrl = new URL(raw, location.href);
+                    const data = registryUrl.searchParams.get('data');
+                    if (data) return data;
+                } catch (e) {}
+
+                const match = raw.match(/[?&]data=([^&#]+)/);
+                return match ? match[1] : raw;
+            };
+
             const _name = new URLSearchParams(location.search).get('name');
             window.options = {
                 hideEditor: true,
                 disableEditorToggle: true,
-                data: registry[_name],
+                data: getRegistryData(registry[_name]),
             };
         </script>
         <script src="assets/js/script.js" defer></script>

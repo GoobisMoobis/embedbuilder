@@ -282,8 +282,10 @@ delete jsonObject.embed;
 addEventListener('DOMContentLoaded', () => {
     if (reverseColumns || localStorage.getItem('reverseColumns'))
         reverse();
-    if (autoParams)
-        document.querySelector('.item.auto-params > input').checked = true;
+    if (autoParams) {
+        const autoParamsInput = document.querySelector('.item.auto-params > input');
+        if (autoParamsInput) autoParamsInput.checked = true;
+    }
     if (hideMenu)
         document.querySelector('.top-btn.menu')?.classList.add('hidden');
     if (noMultiEmbedsOption)
@@ -295,7 +297,8 @@ addEventListener('DOMContentLoaded', () => {
 
     if (autoUpdateURL) {
         document.body.classList.add('autoUpdateURL');
-        document.querySelector('.item.auto > input').checked = true;
+        const autoUpdateInput = document.querySelector('.item.auto > input');
+        if (autoUpdateInput) autoUpdateInput.checked = true;
     }
 
     if (single) {
@@ -306,12 +309,14 @@ addEventListener('DOMContentLoaded', () => {
 
     if (hideEditor) {
         document.body.classList.add('no-editor');
-        document.querySelector('.toggle .toggles .editor input').checked = false;
+        const editorToggleInput = document.querySelector('.toggle .toggles .editor input');
+        if (editorToggleInput) editorToggleInput.checked = false;
     }
 
     if (hidePreview) {
         document.body.classList.add('no-preview');
-        document.querySelector('.toggle .toggles .preview input').checked = false;
+        const previewToggleInput = document.querySelector('.toggle .toggles .preview input');
+        if (previewToggleInput) previewToggleInput.checked = false;
     }
 
     if (onlyEmbed) document.body.classList.add('only-embed');
@@ -1258,12 +1263,13 @@ addEventListener('DOMContentLoaded', () => {
         })
     }, 1000)
 
-    document.querySelector('.timeText').innerText = timestamp();
+    const timeText = document.querySelector('.timeText');
+    if (timeText) timeText.innerText = timestamp();
 
     for (const block of document.querySelectorAll('.markup pre > code'))
         hljs.highlightBlock(block);
 
-    document.querySelector('.opt.gui').addEventListener('click', () => {
+    document.querySelector('.opt.gui')?.addEventListener('click', () => {
         if (lastGuiJson && lastGuiJson !== JSON.stringify(json, null, 4))
             buildGui();
 
@@ -1277,7 +1283,7 @@ addEventListener('DOMContentLoaded', () => {
         }
     })
 
-    document.querySelector('.opt.json').addEventListener('click', () => {
+    document.querySelector('.opt.json')?.addEventListener('click', () => {
         const emptyEmbedIndex = indexOfEmptyGuiEmbed(false);
         if (emptyEmbedIndex !== -1)
             // Clicked GUI tab while a blank embed is added from GUI.
@@ -1403,11 +1409,11 @@ addEventListener('DOMContentLoaded', () => {
     let pickInGuiMode = false;
     togglePicker = pickLater => {
         colors.classList.toggle('display');
-        document.querySelector('.side1').classList.toggle('low');
+        document.querySelector('.side1')?.classList.toggle('low');
         if (pickLater) pickInGuiMode = true;
     };
 
-    document.querySelector('.pickerToggle').addEventListener('click', () => togglePicker());
+    document.querySelector('.pickerToggle')?.addEventListener('click', () => togglePicker());
     buildEmbed();
 
     document.body.addEventListener('click', e => {
@@ -1438,9 +1444,9 @@ addEventListener('DOMContentLoaded', () => {
     const menuMore = document.querySelector('.item.section .inner.more');
     const menuSource = menuMore?.querySelector('.source');
 
-    if (!sourceOption) menuSource.remove();
-    if (menuMore.childElementCount < 2) menuMore?.classList.add('invisible');
-    if (menuMore.parentElement.childElementCount < 1) menuMore?.parentElement.classList.add('invisible');
+    if (!sourceOption) menuSource?.remove();
+    if (menuMore?.childElementCount < 2) menuMore.classList.add('invisible');
+    if (menuMore?.parentElement?.childElementCount < 1) menuMore.parentElement.classList.add('invisible');
 
     document.querySelector('.top-btn.copy').addEventListener('click', e => {
         const mark = e.target.closest('.top-btn.copy').querySelector('.mark'),

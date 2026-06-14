@@ -33,13 +33,6 @@
                 if (typeof value !== 'string') return value;
 
                 const raw = value.trim();
-
-                try {
-                    const registryUrl = new URL(raw, location.href);
-                    const data = registryUrl.searchParams.get('data');
-                    if (data) return data;
-                } catch (e) {}
-
                 const match = raw.match(/[?&]data=([^&#]+)/);
                 return match ? match[1] : raw;
             };

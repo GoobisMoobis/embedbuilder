@@ -80,15 +80,39 @@ const encodeJson = (jsonCode, withURL = false, redirect = false) => {
 
 const decodeJson = data => {
     const str = data || dataSpecified;
-    let jsonData = LZString.decompressFromEncodedURIComponent(str);
-    if (!jsonData) {
-        try { jsonData = LZString.decompressFromEncodedURIComponent(decodeURIComponent(str)); } catch(e) {}
+    const candidates = [...new Set([
+        str,
+        str?.replace(/ /g, '+'),
+        (() => { try { return decodeURIComponent(str); } catch (e) { return null; } })(),
+        (() => { try { return decodeURIComponent(str?.replace(/ /g, '+')); } catch (e) { return null; } })(),
+    ])].filter(Boolean);
+
+    for (const candidate of candidates) {
+        let jsonData;
+
+        try { jsonData = LZString.decompressFromEncodedURIComponent(candidate); } catch (e) {}
+        if (jsonData) {
+            try { return typeof jsonData === 'string' ? JSON.parse(jsonData) : jsonData; } catch (e) {}
+        }
+
+        try {
+            jsonData = candidate.trim?.();
+            if (jsonData?.startsWith('{') || jsonData?.startsWith('['))
+                return JSON.parse(jsonData);
+        } catch (e) {}
+
+        try {
+            jsonData = decodeURIComponent(candidate);
+            return JSON.parse(jsonData);
+        } catch (e) {}
+
+        try {
+            jsonData = decodeURIComponent(atob(candidate));
+            return JSON.parse(jsonData);
+        } catch (e) {}
     }
-    if (!jsonData) {
-        try { jsonData = decodeURIComponent(atob(str)); } catch(e) {}
-    }
-    if (!jsonData) return {};
-    return typeof jsonData === 'string' ? JSON.parse(jsonData) : jsonData;
+
+    return {};
 };
 
 // IMPORTANT: jsonToBase64 and base64ToJson are subject to removal.

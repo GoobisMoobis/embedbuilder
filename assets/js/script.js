@@ -82,7 +82,9 @@ const decodeJson = data => {
     const str = data || dataSpecified;
     let jsonData = LZString.decompressFromEncodedURIComponent(str);
     if (!jsonData) {
-        // Fall back to legacy base64 encoding
+        try { jsonData = LZString.decompressFromEncodedURIComponent(decodeURIComponent(str)); } catch(e) {}
+    }
+    if (!jsonData) {
         jsonData = decodeURIComponent(atob(str));
     }
     return typeof jsonData === 'string' ? JSON.parse(jsonData) : jsonData;
